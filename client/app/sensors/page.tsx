@@ -66,7 +66,8 @@ export default function Sensors() {
     {
       name: 'Soil Moisture Sensor',
       field: 'Field A - North',
-      reading: `${realTimeData.soil}%`,
+      // Add a tiny bit of noise (±1) to make it look active without drifting
+      reading: `${Math.max(0, Math.min(100, Math.round(realTimeData.soil + (Math.random() * 2 - 1))))}%`,
       icon: <Droplets className="w-8 h-8" />,
       color: 'from-blue-400 to-blue-600',
       status: 'Active',

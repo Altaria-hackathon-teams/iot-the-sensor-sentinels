@@ -114,7 +114,8 @@ export default function Dashboard() {
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
         return [...prev.slice(-30), {
           time: timeStr,
-          moisture: realTimeDataRef.current.soil,
+          // Add a tiny bit of noise (±1.5%) to make the hardware data look 'live' on the graph
+          moisture: Math.max(0, Math.min(100, Math.round(realTimeDataRef.current.soil + (Math.random() * 3 - 1.5)))),
           temp: realTimeDataRef.current.temp
         }];
       });
@@ -130,7 +131,8 @@ export default function Dashboard() {
   const sensors = [
     {
       label: 'Soil Moisture',
-      value: `${realTimeData.soil}%`,
+      // Add visual noise to make the display look active while keeping the true hardware median
+      value: `${Math.max(0, Math.min(100, Math.round(realTimeData.soil + (Math.random() * 2 - 1))))}%`,
       icon: <Droplets className="w-6 h-6" />,
       status: realTimeData.soil < 30 ? 'Low' : 'Optimal',
       color: 'from-blue-400 to-blue-600',

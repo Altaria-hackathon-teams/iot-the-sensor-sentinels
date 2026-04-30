@@ -399,70 +399,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION 11: Pricing Plans */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold text-center mb-20 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent text-balance">
-            Simple Pricing Plans
-          </h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Starter',
-                price: '₹99',
-                period: '/month',
-                features: ['Basic Dashboard', '1 Sensor', 'Weekly Reports', 'Email Support'],
-              },
-              {
-                name: 'Professional',
-                price: '₹299',
-                period: '/month',
-                features: ['Advanced Dashboard', '5 Sensors', 'Real-time Alerts', 'Priority Support', 'AI Recommendations'],
-                popular: true,
-              },
-              {
-                name: 'Enterprise',
-                price: 'Custom',
-                period: 'pricing',
-                features: ['Unlimited Sensors', 'API Access', 'Dedicated Manager', 'Custom Integrations', 'SLA Guarantee'],
-              },
-            ].map((plan, i) => (
-              <div
-                key={i}
-                className={`glass dark:glass-dark rounded-2xl overflow-hidden transition-all hover:-translate-y-2 ${
-                  plan.popular ? 'ring-2 ring-accent scale-105 lg:scale-110' : ''
-                }`}
-              >
-                <div className="p-8 space-y-6">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold text-accent">{plan.price}</span>
-                      <span className="text-foreground/60">{plan.period}</span>
-                    </div>
-                  </div>
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, j) => (
-                      <li key={j} className="flex items-center gap-3 text-foreground/70">
-                        <Check className="w-5 h-5 text-accent flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <button className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                    plan.popular
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-lg hover:shadow-green-500/40'
-                      : 'border-2 border-accent text-accent hover:bg-accent/10'
-                  }`}>
-                    Get Started
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* SECTION 12: Call to Action */}
       <section className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-500/10 via-green-600/10 to-emerald-500/10">
