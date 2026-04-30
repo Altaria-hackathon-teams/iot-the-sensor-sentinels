@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { broadcast } = require('../services/socket-handler');
+const aiService = require('../services/ai-service');
 
 // --- @route   POST /api/sensors/data ---
 // Endpoint for hardware to send sensor data via HTTP POST
 router.post('/data', (req, res) => {
     try {
-        const { soil, distance, flow, temp, pH, phosphorus, nitrogen } = req.body;
+        const { soil, distance, flow, temp, pH, phosphorus, nitrogen, humidity } = req.body;
         
+        // Generate AI insights based on the incoming data
+        const insights = aiService.generateInsights(req.body);
+
         const sensorData = {
             type: 'SENSOR_UPDATE',
             data: {
@@ -18,6 +22,8 @@ router.post('/data', (req, res) => {
                 pH,
                 phosphorus,
                 nitrogen,
+                humidity,
+                insights,
                 timestamp: new Date().toISOString()
             }
         };

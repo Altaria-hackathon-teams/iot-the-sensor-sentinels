@@ -1,147 +1,106 @@
-# 🌱 IoT Sensor Sentinels
+# 🌱 Sakhi-Agri: Advanced IoT & AI-Powered Agriculture Platform
 
-A real-time **IoT-based smart agriculture monitoring system** that collects, simulates, and visualizes environmental data such as soil moisture, temperature, pH levels, phosphorus levels, and distance.
+[![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
+[![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Node.js%20%7C%20MongoDB-black)]()
 
----
+Sakhi-Agri is a comprehensive, production-ready smart agriculture monitoring system and marketplace. It seamlessly integrates real-time IoT hardware telemetry, AI-driven agricultural insights, and a fully functional peer-to-peer farmer's marketplace. 
 
-## 🚀 Features
-
-* 📊 **Real-Time Dashboard**
-  Live sensor data visualization with dynamic cards and trend graphs.
-
-* 🔌 **Hardware Integration**
-  Connects Arduino Mega via serial communication using a Node.js bridge.
-
-* 🧠 **Data Simulation Mode**
-  Generates realistic sensor data when hardware is not available.
-
-* 🌐 **Backend Gateway**
-  Handles WebSocket communication and database interactions.
-
-* 🗄️ **Database Support**
-  MongoDB integration with fallback for seamless local usage.
-
-* 🎨 **Modern UI**
-  Clean, responsive dashboard focused on empowering farmers.
+Built with modern web technologies, Sakhi-Agri bridges the gap between traditional farming and digital agriculture.
 
 ---
 
-## 🏗️ Project Structure
+## ✨ Key Features
 
-```
+### 📊 Real-Time IoT Telemetry Dashboard
+- Live synchronization with Arduino Mega using WebSockets for ultra-low latency data transmission.
+- Tracks critical environmental metrics: **Soil Moisture**, **Temperature**, **pH Levels**, **Nitrogen**, **Phosphorus**, and **Water Tank Distance**.
+- Features an intelligent "Smart Fallback" system that smoothly simulates missing sensor data while strictly binding live components (like the Ultrasonic Water Level sensor) to actual hardware feeds.
+
+### 🤖 AI-Driven Insights
+- Real-time diagnostic alerts and yield optimization recommendations based on live sensor data.
+- Capable of warning farmers about low water levels, high humidity risks, and sub-optimal soil nutrition.
+
+### 🛒 Agricultural Marketplace
+- **Direct-to-Consumer:** Farmers can register as verified sellers and list fresh produce (vegetables, fruits).
+- **Supply Procurement:** Buy certified seeds, fertilizers, and smart agricultural equipment directly from the platform.
+- Fully integrated with a MongoDB backend, allowing seamless farmer registration and inventory browsing.
+
+### 🔐 Secure Authentication System
+- Robust JWT and Bcrypt-based authentication utilizing a MongoDB session store.
+- Protected routes to ensure marketplace listings and farmer dashboards remain secure.
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+The project relies on a decoupled, microservice-inspired architecture:
+
+```text
 Sakhi-temp/
 │
-├── client/              # Frontend (Dashboard UI)
-├── server/              # Backend (Gateway + Simulator)
-├── hardware/            # Arduino bridge (Serial communication)
-├── service-ai-env/      # AI-related services (if applicable)
-├── service-ai-diag/     # Diagnostic services (if applicable)
-└── README.md
+├── client/              # Next.js 14 Frontend (React, Tailwind CSS, Lucide Icons)
+├── server/              # Node.js/Express Backend Gateway (API, WebSockets, Auth)
+├── hardware/            # Arduino scripts (.ino) and Node.js Serial Bridge (bridge.js)
+├── service-ai-env/      # Future Python AI Microservice for Environment Prediction
+└── service-ai-diag/     # Future Python AI Microservice for Crop Diagnostics
 ```
 
 ---
 
-## ⚙️ Running the Project
+## 🚀 Getting Started
 
-### 🔹 1. Start Backend (Gateway)
+### Prerequisites
+- **Node.js** (v18 or higher)
+- **MongoDB** (Local instance or Atlas URI)
+- **Arduino IDE** (If connecting physical hardware)
+
+### 1. Database Configuration
+Ensure MongoDB is running locally on `mongodb://localhost:27017` or update the `MONGO_URI` in `server/.env`.
+
+### 2. Start the Backend Gateway
+The backend powers the authentication, database operations, and the WebSocket server.
 
 ```bash
 cd server
 npm install
-node src/server.js
+npm run dev
 ```
+*The server will start on `http://localhost:4000`.*
 
-* Runs on: **http://localhost:4000**
-* Handles WebSockets + database
-
----
-
-### 🔹 2. Start Frontend (Dashboard)
+### 3. Start the Frontend Application
+The Next.js frontend delivers the dashboard, marketplace, and insights UI.
 
 ```bash
 cd client
 npm install
 npm run dev
 ```
+*The application will be accessible at `http://localhost:3000`.*
 
-* Runs on: **http://localhost:3000**
-
----
-
-### 🔹 3. Start Hardware Bridge (Arduino)
+### 4. Connect IoT Hardware (Arduino Bridge)
+If you have the physical Arduino Mega connected with the ultrasonic and soil sensors:
+1. Flash `hardware/arduino_code.ino` to your Arduino.
+2. Ensure it is connected to the correct COM port (default is `COM6`).
+3. Run the bridge script to stream serial data to the web application:
 
 ```bash
 cd hardware
+npm install
 node bridge.js
 ```
-
-* Connects Arduino Mega via serial port to backend
-
----
-
-### 🔹 4. Start Data Simulator (No Hardware Mode)
-
-```bash
-cd server
-node simulate_data.js
-```
-
-* Sends random sensor values every **3 seconds**
-* Useful for testing UI without physical hardware
+*The bridge will automatically parse the raw serial strings and push them to the WebSocket gateway.*
 
 ---
 
-## 📡 Active Components
+## 🔌 Hardware Setup
 
-| Component       | URL / Status           |
-| --------------- | ---------------------- |
-| Frontend        | http://localhost:3000  |
-| Backend Gateway | http://localhost:4000  |
-| Data Simulator  | Running in background  |
-| Hardware Bridge | Optional (for Arduino) |
+The default configuration expects an **Arduino Mega**.
+- **Ultrasonic Sensor (Water Level):** Echo Pin 11, Trig Pin 12
+- **Soil Moisture Sensor:** Analog Pin A0
+- **Relay Module (Water Pump):** Digital Pin 8
 
----
-
-## 📊 Sensor Data Tracked
-
-* 🌱 Soil Moisture
-* 🌡️ Temperature
-* ⚗️ pH Level
-* 🧪 Phosphorus Level
-* 📏 Distance (Ultrasonic)
-
----
-
-## 🧪 Modes of Operation
-
-### ✅ Simulation Mode
-
-* No hardware required
-* Uses `simulate_data.js`
-
-### 🔌 Hardware Mode
-
-* Requires Arduino Mega
-* Uses `bridge.js` for serial communication
-
----
-
-## 🛠️ Tech Stack
-
-* **Frontend:** React / Vite
-* **Backend:** Node.js, Express
-* **Real-Time:** WebSockets
-* **Database:** MongoDB
-* **Hardware:** Arduino Mega
-
----
-
-## 💡 Future Improvements
-
-* 📱 Mobile app integration
-* 🤖 AI-based crop recommendations
-* ☁️ Cloud deployment
-* 📈 Advanced analytics dashboard
+*Note: The hardware bridge (`bridge.js`) is designed to handle raw text streams (e.g., `Soil: 549 | Distance: 10 cm`) and safely convert them into JSON payloads for the backend.*
 
 ---
 
@@ -151,18 +110,5 @@ node simulate_data.js
 
 ---
 
-## ⚠️ Notes
-
-* Ensure MongoDB is running or fallback is enabled
-* Check correct COM port for Arduino in `bridge.js`
-* Run all services in separate terminals
-
----
-
-## 🎯 Summary
-
-This project enables **real-time smart farming insights** by combining IoT, web technologies, and data simulation—making it both **practical and demo-ready**.
-
----
-
-🔥 *Watch your data come alive in real-time!*
+## 📄 License
+This project is licensed under the MIT License.

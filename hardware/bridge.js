@@ -20,8 +20,36 @@ parser.on('data', async (line) => {
     try {
         console.log(`📥 Serial Data: ${line}`);
         
-        // Parse the JSON data from Arduino
-        const sensorData = JSON.parse(line);
+        // The Arduino is currently sending data like: "Soil: 549 | Distance: 9 cm | Flow: 0.00 L/min"
+        // We need to parse this string instead of expecting JSON.
+        let sensorData;
+        if (line.includes('Soil:') && line.includes('Distance:')) {
+            const soilMatch = line.match(/Soil:\s*(\d+)/);
+            const distMatch = line.match(/Distance:\s*(\d+)/);
+            const flowMatch = line.match(/Flow:\s*([\d.]+)/);
+
+            if (soilMatch && distMatch) {
+                // Convert raw soil reading (e.g. 549) to percentage. Typically 1023 is dry (0%), 0 is wet (100%)
+                const rawSoil = parseInt(soilMatch[1], 10);
+                // Simple mapping: 1023 -> 0%, 0 -> 100%
+                let soilPercent = 100 - Math.round((rawSoil / 1023) * 100);
+                if (soilPercent < 0) soilPercent = 0;
+                if (soilPercent > 100) soilPercent = 100;
+
+                sensorData = {
+                    soil: soilPercent,
+                    distance: parseInt(distMatch[1], 10),
+                    flow: flowMatch ? parseFloat(flowMatch[1]) : 0
+                };
+            } else {
+                throw new Error("Could not extract values from string");
+            }
+        } else if (line.startsWith('{')) {
+            // Fallback in case Arduino code is updated to send JSON
+            sensorData = JSON.parse(line);
+        } else {
+            throw new SyntaxError("Not sensor data string");
+        }
         
         // Send to Backend
         const response = await axios.post(BACKEND_URL, sensorData);

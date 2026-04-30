@@ -19,6 +19,8 @@ export default function Sensors() {
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:4000');
+    let dummyInterval: NodeJS.Timeout;
+
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
@@ -28,6 +30,7 @@ export default function Sensors() {
             soil: payload.data.soil ?? prev.soil,
             temp: payload.data.temp ?? prev.temp,
             pH: payload.data.pH ?? prev.pH,
+            humidity: payload.data.humidity ?? prev.humidity,
             phosphorus: payload.data.phosphorus ?? prev.phosphorus,
             nitrogen: payload.data.nitrogen ?? prev.nitrogen,
             distance: payload.data.distance ?? prev.distance,
@@ -38,7 +41,25 @@ export default function Sensors() {
         console.error('❌ WS Error:', err);
       }
     };
-    return () => socket.close();
+
+    socket.onerror = () => {
+      console.warn('⚠️ WebSocket failed to connect.');
+    };
+
+    // We ALWAYS run dummy mode for temp, pH, humidity, etc., because Arduino doesn't have these sensors!
+    // BUT we NEVER randomize distance (Water Level) or soil, those are STRICTLY hardware.
+    dummyInterval = setInterval(() => {
+      setRealTimeData(prev => ({
+        ...prev,
+        temp: Math.floor(Math.random() * (30 - 20) + 20),
+        pH: parseFloat((Math.random() * (8 - 6) + 6).toFixed(1)),
+        humidity: Math.floor(Math.random() * (90 - 30) + 30),
+        nitrogen: Math.floor(Math.random() * (70 - 40) + 40),
+        phosphorus: Math.floor(Math.random() * (60 - 30) + 30),
+      }));
+    }, 3000);
+
+    return () => { socket.close(); clearInterval(dummyInterval); };
   }, []);
 
   const sensors = [

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../utils/authMiddleware');
 const MarketplaceItem = require('../models/MarketplaceItem');
+const Farmer = require('../models/Farmer');
 
 // --- @route   GET /api/marketplace ---
 // @desc    Get all ACTIVE marketplace listings
@@ -106,6 +107,38 @@ router.delete('/:id', isLoggedIn, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// --- @route   POST /api/marketplace/register-farmer ---
+// @desc    Register a new farmer to sell produce
+// @access  Public
+router.post('/register-farmer', async (req, res) => {
+    try {
+        const { name, farmName, location, phone, email, products, experience, certification } = req.body;
+
+        // Basic validation
+        if (!name || !farmName || !location || !phone || !email || !products || !experience) {
+            return res.status(400).json({ message: 'Please provide all required fields.' });
+        }
+
+        const newFarmer = new Farmer({
+            name,
+            farmName,
+            location,
+            phone,
+            email,
+            products,
+            experience,
+            certification
+        });
+
+        const savedFarmer = await newFarmer.save();
+        res.status(201).json(savedFarmer);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error during farmer registration.' });
     }
 });
 

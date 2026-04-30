@@ -16,6 +16,7 @@ const authRoutes = require('./routes/auth');
 const marketplaceRoutes = require('./routes/marketplace');
 const farmersHubRoutes = require('./routes/farmersHub');
 const sensorRoutes = require('./routes/sensors');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -70,6 +71,7 @@ async function startServer() {
     app.use('/api/marketplace', marketplaceRoutes);
     app.use('/api/farmers-hub', farmersHubRoutes);
     app.use('/api/sensors', sensorRoutes);
+    app.use('/api/ai', aiRoutes);
 
     // --- AI Service Proxy Routes (Future Implementation) ---
     // Example of how you would proxy to your Python AI services

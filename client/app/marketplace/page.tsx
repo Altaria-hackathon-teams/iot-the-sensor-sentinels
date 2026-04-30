@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer';
 import { ShoppingCart, Star, Filter, Search, Plus, MapPin, Clock, Truck, Shield, User, Mail, Phone, Check, Store, Users, TrendingUp, Package } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 
 // To-Buy Products Data (Equipment, Supplies, Seeds, etc.)
 const buyProducts = [
@@ -95,6 +96,8 @@ export default function Marketplace() {
   const [selectedBuyCategory, setSelectedBuyCategory] = useState('All');
   const [selectedSellCategory, setSelectedSellCategory] = useState('All');
   const [cartCount, setCartCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [farmerFormData, setFarmerFormData] = useState({
     name: '', farmName: '', location: '', phone: '', email: '',
     products: '', experience: '', certification: ''
@@ -117,14 +120,30 @@ export default function Marketplace() {
     window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: cartCount + 1 } }));
   };
 
-  const handleFarmerSubmit = (e: React.FormEvent) => {
+  const handleFarmerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Farmer registration:', farmerFormData);
-    alert('Registration submitted successfully! We will contact you soon.');
-    setFarmerFormData({
-      name: '', farmName: '', location: '', phone: '', email: '',
-      products: '', experience: '', certification: ''
-    });
+    setIsSubmitting(true);
+    setFormMessage(null);
+
+    try {
+      const response = await axios.post('http://localhost:4000/api/marketplace/register-farmer', farmerFormData);
+      
+      if (response.status === 201) {
+        setFormMessage({ type: 'success', text: 'Registration submitted successfully! We will contact you soon.' });
+        setFarmerFormData({
+          name: '', farmName: '', location: '', phone: '', email: '',
+          products: '', experience: '', certification: ''
+        });
+      }
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      setFormMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to submit registration. Please try again later.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -406,6 +425,15 @@ export default function Marketplace() {
                 </div>
 
                 <form onSubmit={handleFarmerSubmit} className="space-y-4">
+                  {formMessage && (
+                    <div className={`p-4 rounded-lg text-sm font-semibold flex items-center gap-2 ${
+                      formMessage.type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
+                    }`}>
+                      {formMessage.type === 'success' ? <Check size={18} /> : <div className="w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">!</div>}
+                      {formMessage.text}
+                    </div>
+                  )}
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Full Name</label>
@@ -418,6 +446,7 @@ export default function Marketplace() {
                           value={farmerFormData.name}
                           onChange={(e) => setFarmerFormData({ ...farmerFormData, name: e.target.value })}
                           required
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -431,6 +460,7 @@ export default function Marketplace() {
                         value={farmerFormData.farmName}
                         onChange={(e) => setFarmerFormData({ ...farmerFormData, farmName: e.target.value })}
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -446,6 +476,7 @@ export default function Marketplace() {
                         value={farmerFormData.location}
                         onChange={(e) => setFarmerFormData({ ...farmerFormData, location: e.target.value })}
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -462,6 +493,7 @@ export default function Marketplace() {
                           value={farmerFormData.phone}
                           onChange={(e) => setFarmerFormData({ ...farmerFormData, phone: e.target.value })}
                           required
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -477,6 +509,7 @@ export default function Marketplace() {
                           value={farmerFormData.email}
                           onChange={(e) => setFarmerFormData({ ...farmerFormData, email: e.target.value })}
                           required
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -490,6 +523,7 @@ export default function Marketplace() {
                       value={farmerFormData.products}
                       onChange={(e) => setFarmerFormData({ ...farmerFormData, products: e.target.value })}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
 
@@ -501,6 +535,7 @@ export default function Marketplace() {
                         value={farmerFormData.experience}
                         onChange={(e) => setFarmerFormData({ ...farmerFormData, experience: e.target.value })}
                         required
+                        disabled={isSubmitting}
                       >
                         <option value="">Select experience</option>
                         <option value="0-2">0-2 years</option>
@@ -520,6 +555,7 @@ export default function Marketplace() {
                           className="flex-1 bg-transparent outline-none"
                           value={farmerFormData.certification}
                           onChange={(e) => setFarmerFormData({ ...farmerFormData, certification: e.target.value })}
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -527,12 +563,27 @@ export default function Marketplace() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-orange-500/40 transition-all flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
+                      isSubmitting 
+                        ? 'bg-orange-400 text-white/70 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg hover:shadow-orange-500/40'
+                    }`}
                   >
-                    <Check size={20} />
-                    Register as Farmer
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={20} />
+                        Register as Farmer
+                      </>
+                    )}
                   </button>
                 </form>
+
               </div>
             </div>
           )}

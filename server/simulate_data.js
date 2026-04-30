@@ -14,6 +14,7 @@ function sendRandomData() {
         pH: (Math.random() * (8 - 6) + 6).toFixed(1), // 6.0-8.0
         phosphorus: Math.floor(Math.random() * (60 - 30) + 30), // 30-60 ppm
         nitrogen: Math.floor(Math.random() * (70 - 40) + 40), // 40-70 ppm
+        humidity: Math.floor(Math.random() * (90 - 30) + 30), // 30-90%
     };
 
     axios.post(BACKEND_URL, data)

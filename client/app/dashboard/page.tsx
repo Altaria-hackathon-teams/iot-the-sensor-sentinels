@@ -5,7 +5,7 @@ import { DashboardAnimatedObjects } from '@/components/dashboard-animated-object
 import { Footer } from '@/components/footer';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Droplets, Thermometer, Wind, AlertCircle, TrendingUp, Cloud, Zap } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const cropHealthData = [
   { day: 'Mon', health: 85 },
@@ -46,17 +46,19 @@ export default function Dashboard() {
   });
 
   const [trendData, setTrendData] = useState([
-    { time: '00:00', moisture: 65, temp: 26 },
-    { time: '04:00', moisture: 62, temp: 24 },
-    { time: '08:00', moisture: 58, temp: 22 },
-    { time: '12:00', moisture: 55, temp: 25 },
-    { time: '16:00', moisture: 60, temp: 26 },
-    { time: '20:00', moisture: 68, temp: 27 },
+    { time: '00:00:00', moisture: 65, temp: 26 },
   ]);
+
+  const realTimeDataRef = useRef(realTimeData);
+  useEffect(() => {
+    realTimeDataRef.current = realTimeData;
+  }, [realTimeData]);
 
   useEffect(() => {
     // Connect to WebSocket server
     const socket = new WebSocket('ws://localhost:4000');
+    let dummyInterval: NodeJS.Timeout;
+    let graphInterval: NodeJS.Timeout;
 
     socket.onopen = () => {
       console.log('✅ Connected to Sakhi Gateway');
@@ -67,7 +69,7 @@ export default function Dashboard() {
         const payload = JSON.parse(event.data);
         if (payload.type === 'SENSOR_UPDATE') {
           const newData = payload.data;
-          
+
           setRealTimeData(prev => ({
             ...prev,
             soil: newData.soil ?? prev.soil,
@@ -79,27 +81,49 @@ export default function Dashboard() {
             phosphorus: newData.phosphorus ?? prev.phosphorus,
             nitrogen: newData.nitrogen ?? prev.nitrogen
           }));
-
-          // Update trend data with new point
-          setTrendData(prev => {
-            const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            const newPoint = {
-              time: timeStr,
-              moisture: newData.soil ?? prev[prev.length - 1].moisture,
-              temp: newData.temp ?? prev[prev.length - 1].temp
-            };
-            // Keep last 10 points
-            return [...prev.slice(-9), newPoint];
-          });
         }
       } catch (err) {
         console.error('❌ Error parsing WebSocket message:', err);
       }
     };
 
+    socket.onerror = () => {
+      console.warn('⚠️ WebSocket failed. Starting local dummy mode for demo...');
+    };
+
+    socket.onclose = () => {
+      console.warn('⚠️ WebSocket closed. Starting local dummy mode...');
+    };
+
+    // Update realTimeData for simulated sensors (temp, pH, etc.)
+    dummyInterval = setInterval(() => {
+      setRealTimeData(prev => ({
+        ...prev,
+        temp: Math.floor(Math.random() * (30 - 20) + 20),
+        humidity: Math.floor(Math.random() * (90 - 30) + 30),
+        pH: parseFloat((Math.random() * (8 - 6) + 6).toFixed(1)),
+        phosphorus: Math.floor(Math.random() * (60 - 30) + 30),
+        nitrogen: Math.floor(Math.random() * (70 - 40) + 40),
+      }));
+    }, 3000);
+
+    // Update the graph smoothly every 2 seconds with the current state values
+    graphInterval = setInterval(() => {
+      setTrendData(prev => {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        return [...prev.slice(-30), {
+          time: timeStr,
+          moisture: realTimeDataRef.current.soil,
+          temp: realTimeDataRef.current.temp
+        }];
+      });
+    }, 2000);
+
     return () => {
       socket.close();
+      clearInterval(dummyInterval);
+      clearInterval(graphInterval);
     };
   }, []);
 
@@ -146,7 +170,7 @@ export default function Dashboard() {
       <Navbar />
 
       <DashboardAnimatedObjects />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-8">
           {/* Header */}
@@ -165,9 +189,8 @@ export default function Dashboard() {
                   <div className={`w-12 h-12 bg-gradient-to-br ${sensor.color} rounded-lg flex items-center justify-center text-white`}>
                     {sensor.icon}
                   </div>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    sensor.status === 'Low' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                  }`}>
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${sensor.status === 'Low' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                    }`}>
                     {sensor.status}
                   </span>
                 </div>
@@ -188,8 +211,8 @@ export default function Dashboard() {
                 <AreaChart data={trendData}>
                   <defs>
                     <linearGradient id="colorMoisture" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(16, 185, 129, 0.1)" />
