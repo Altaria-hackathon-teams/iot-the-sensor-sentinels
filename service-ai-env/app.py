@@ -7,8 +7,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from flask import Flask, request, jsonify
 from flask_sock import Sock
-from flask_cors import CORS  # Add this import
+from flask_cors import CORS
 import logging
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -20,10 +25,26 @@ CORS(
     app,
     origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     supports_credentials=True,
-)  # Add this line
+)
 sock = Sock(app)
 
-# Your existing model training and loading code remains the same...
+# Configure Gemini for Voice Assistant
+API_KEY = os.getenv("GOOGLE_API_KEY")
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+    voice_model = genai.GenerativeModel('models/gemini-flash-latest')
+    logger.info("✅ Gemini Voice Assistant initialized.")
+else:
+    voice_model = None
+    logger.warning("⚠️ GOOGLE_API_KEY not found. Voice assistant will be limited.")
+
+# Global state to store latest sensor data
+latest_sensor_data = {
+    "Soil_Moisture": 45.0,
+    "Soil_Temperature": 24.0,
+    "Humidity": 60.0
+}
+
 clients = set()
 
 
@@ -61,7 +82,7 @@ def train_and_save_model():
     return True
 
 
-# Load models (your existing code)
+# Load models
 MODEL_FILES = ["plant_health_model.pkl", "label_encoder.pkl", "healthy_averages.pkl"]
 
 if not all(os.path.exists(f) for f in MODEL_FILES):
@@ -108,10 +129,15 @@ def predict_and_recommend(sensor_data):
         return "Error", [f"Prediction failed: {str(e)}"]
 
 
-# Add a health check endpoint for your auth context
+@app.route("/api/auth/logout", methods=["POST"])
+def logout():
+    """Logout endpoint"""
+    return jsonify({"message": "Logged out"}), 200
+
+
 @app.route("/api/auth/check-session", methods=["GET"])
 def check_session():
-    """Endpoint for session checking - fix for the auth error"""
+    """Endpoint for session checking"""
     logger.info("🔐 Session check requested")
     return jsonify(
         {
@@ -119,6 +145,54 @@ def check_session():
             "user": {"id": 1, "email": "demo@example.com", "name": "Demo User"},
         }
     )
+
+
+@app.route("/api/voice/query", methods=["POST"])
+def voice_query():
+    """Endpoint for processing voice/text queries with sensor context"""
+    if not voice_model:
+        return jsonify({"error": "Voice assistant model not configured. Please set GOOGLE_API_KEY in .env"}), 500
+
+    data = request.json
+    query = data.get("query")
+    language = data.get("language", "english")
+
+    if not query:
+        return jsonify({"error": "No query provided"}), 400
+
+    logger.info(f"🎤 Voice Query: {query} ({language})")
+
+    # Get latest predictions for context
+    status, suggestions = predict_and_recommend(latest_sensor_data)
+
+    # Construct context-aware prompt
+    context_prompt = f"""
+    You are 'AgnI', a specialized AI Agricultural Assistant for smart farming.
+    Current Sensor Data:
+    - Soil Moisture: {latest_sensor_data['Soil_Moisture']}%
+    - Soil Temperature: {latest_sensor_data['Soil_Temperature']}°C
+    - Humidity: {latest_sensor_data['Humidity']}%
+
+    Current Plant Health Status: {status}
+    Recommendations: {', '.join(suggestions) if suggestions else 'None'}
+
+    The user is asking: "{query}"
+
+    Please provide a concise, helpful response in {language}.
+    If the user asks about the farm or crops, use the current sensor data to give specific advice.
+    Keep it conversational and farmer-friendly. Respond in 2-3 sentences max.
+    """
+
+    try:
+        response = voice_model.generate_content(context_prompt)
+        return jsonify({
+            "response": response.text,
+            "status": status,
+            "suggestions": suggestions
+        })
+    except Exception as e:
+        logger.error(f"❌ Gemini Error: {e}")
+        return jsonify({"error": "Failed to generate AI response", "details": str(e)}), 500
 
 
 @app.route("/test")
@@ -135,7 +209,7 @@ def test_data():
             "live_data": test_sensor_data,
             "plant_health_status": status,
             "improvement_suggestions": suggestions,
-            "message": "Test endpoint working",
+            "message": "Server is running fine ✅",
         }
     )
 
@@ -148,7 +222,7 @@ def websocket_handler(ws):
     try:
         welcome_msg = {
             "type": "welcome",
-            "message": "Connected to Environmental Assessment Server",
+            "message": "Connected to AgnI Sensor Server",
             "clients_count": len(clients),
         }
         ws.send(json.dumps(welcome_msg))
@@ -162,6 +236,11 @@ def websocket_handler(ws):
 
             try:
                 sensor_readings = json.loads(message)
+
+                # Update global sensor state
+                global latest_sensor_data
+                latest_sensor_data.update(sensor_readings)
+
                 status, suggestions = predict_and_recommend(sensor_readings)
 
                 response_payload = {
@@ -179,29 +258,26 @@ def websocket_handler(ws):
                         disconnected_clients.append(client)
 
                 for client in disconnected_clients:
-                    clients.remove(client)
+                    clients.discard(client)
 
                 logger.info(f"📤 Broadcasted results to {len(clients)} client(s).")
 
             except json.JSONDecodeError as e:
                 logger.error(f"❌ JSON decode error: {e}")
-                error_msg = {"error": "Invalid JSON format"}
-                ws.send(json.dumps(error_msg))
+                ws.send(json.dumps({"error": "Invalid JSON format"}))
             except Exception as e:
                 logger.error(f"❌ Error processing message: {e}")
-                error_msg = {"error": "Processing error"}
-                ws.send(json.dumps(error_msg))
+                ws.send(json.dumps({"error": "Processing error"}))
 
     except Exception as e:
         logger.error(f"❌ WebSocket error: {e}")
     finally:
-        if ws in clients:
-            clients.remove(ws)
-        logger.info(f"❌ Client disconnected. Total clients: {len(clients)}")
+        clients.discard(ws)
+        logger.info(f"📴 Client disconnected. Total clients: {len(clients)}")
 
 
 if __name__ == "__main__":
-    logger.info("\n🚀 Starting Flask Server with CORS support...")
-    logger.info("WebSocket is available at ws://0.0.0.0:9000/ws")
-    logger.info("HTTP endpoints available at http://0.0.0.0:9000/")
-    app.run(host="0.0.0.0", port=9000, debug=True)
+    logger.info("\n🚀 Starting AgnI Flask Server...")
+    logger.info("WebSocket available at ws://0.0.0.0:5002/ws")
+    logger.info("HTTP endpoints at http://0.0.0.0:5002/")
+    app.run(host="0.0.0.0", port=5002, debug=True)
