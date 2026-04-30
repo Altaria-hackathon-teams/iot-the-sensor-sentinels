@@ -28,8 +28,10 @@ const regionData = [
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -60,7 +62,7 @@ export default function Home() {
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tl from-green-500/20 to-transparent rounded-full blur-3xl animate-pulse animation-delay-2000" />
           <div className="absolute inset-0 opacity-30 dark:opacity-20">
-            {[...Array(20)].map((_, i) => (
+            {mounted && [...Array(20)].map((_, i) => (
               <div
                 key={i}
                 className="absolute w-1 h-1 bg-green-400 rounded-full animate-pulse"
