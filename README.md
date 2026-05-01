@@ -160,8 +160,10 @@ node bridge.js
 ---
 
 ## 👨‍💻 Author
-**Shadx-007 (Vikramjeet Maity)**  
+**Shadx-007 (Vikramjeet Maity)** 
+
 **SrijanKapoor-28 (Ayush)**
+
 **altaria1 (Srijan)**
 
 *Advanced Agentic IoT & AI Specialist*
