@@ -61,22 +61,23 @@ export default function Dashboard() {
     let graphInterval: NodeJS.Timeout;
 
     socket.onopen = () => {
-      console.log('✅ Connected to Sakhi Gateway');
+      console.log('✅ Connected to AI Sensor Server');
     };
 
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
-        if (payload.type === 'SENSOR_UPDATE') {
-          const newData = payload.data;
-
+        // Handle both message structures
+        const newData = payload.live_data || (payload.type === 'SENSOR_UPDATE' ? payload.data : null);
+        
+        if (newData) {
           setRealTimeData(prev => ({
             ...prev,
-            soil: newData.soil ?? prev.soil,
+            soil: newData.soil ?? newData.Soil_Moisture ?? prev.soil,
+            temp: newData.temp ?? newData.Soil_Temperature ?? prev.temp,
+            humidity: newData.humidity ?? newData.Humidity ?? prev.humidity,
             distance: newData.distance ?? prev.distance,
             flow: newData.flow ?? prev.flow,
-            temp: newData.temp ?? prev.temp,
-            humidity: newData.humidity ?? prev.humidity,
             pH: newData.pH ?? prev.pH,
             phosphorus: newData.phosphorus ?? prev.phosphorus,
             nitrogen: newData.nitrogen ?? prev.nitrogen
