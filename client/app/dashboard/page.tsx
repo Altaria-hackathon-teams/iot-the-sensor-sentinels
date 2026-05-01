@@ -56,7 +56,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Connect to WebSocket server
-    const socket = new WebSocket('ws://localhost:5002/ws');
+    const socket = new WebSocket('ws://localhost:4000');
     let dummyInterval: NodeJS.Timeout;
     let graphInterval: NodeJS.Timeout;
 
@@ -73,9 +73,11 @@ export default function Dashboard() {
         if (newData) {
           setRealTimeData(prev => ({
             ...prev,
-            soil: newData.Soil_Moisture ?? newData.soil ?? prev.soil,
-            temp: newData.Soil_Temperature ?? newData.temp ?? prev.temp,
-            humidity: newData.Humidity ?? newData.humidity ?? prev.humidity,
+            soil: newData.soil ?? newData.Soil_Moisture ?? prev.soil,
+            temp: newData.temp ?? newData.Soil_Temperature ?? prev.temp,
+            humidity: newData.humidity ?? newData.Humidity ?? prev.humidity,
+            distance: newData.distance ?? prev.distance,
+            flow: newData.flow ?? prev.flow,
             pH: newData.pH ?? prev.pH,
             phosphorus: newData.phosphorus ?? prev.phosphorus,
             nitrogen: newData.nitrogen ?? prev.nitrogen

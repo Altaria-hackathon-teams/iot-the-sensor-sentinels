@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if user is logged in on mount
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:5002/api/auth/check-session', {
+        const response = await fetch('http://localhost:4000/api/auth/check-session', {
           credentials: 'include',
         });
         if (response.ok) {
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:5002/api/auth/logout', {
+      await fetch('http://localhost:4000/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
