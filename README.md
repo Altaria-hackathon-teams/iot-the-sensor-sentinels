@@ -1,114 +1,164 @@
-# 🌱 Sakhi-Agri: Advanced IoT & AI-Powered Agriculture Platform
+# 🌱 Sakhi-Agri: Smart IoT & AI Agriculture Ecosystem
 
-[![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
-[![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Node.js%20%7C%20MongoDB-black)]()
+![Status](https://img.shields.io/badge/Status-Active-success.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Node.js%20%7C%20Python%20%7C%20IoT-orange)
 
-Sakhi-Agri is a comprehensive, production-ready smart agriculture monitoring system and marketplace. It seamlessly integrates real-time IoT hardware telemetry, AI-driven agricultural insights, and a fully functional peer-to-peer farmer's marketplace. 
-
-Built with modern web technologies, Sakhi-Agri bridges the gap between traditional farming and digital agriculture.
-
----
-
-## ✨ Key Features
-
-### 📊 Real-Time IoT Telemetry Dashboard
-- Live synchronization with Arduino Mega using WebSockets for ultra-low latency data transmission.
-- Tracks critical environmental metrics: **Soil Moisture**, **Temperature**, **pH Levels**, **Nitrogen**, **Phosphorus**, and **Water Tank Distance**.
-- Features an intelligent "Smart Fallback" system that smoothly simulates missing sensor data while strictly binding live components (like the Ultrasonic Water Level sensor) to actual hardware feeds.
-
-### 🤖 AI-Driven Insights
-- Real-time diagnostic alerts and yield optimization recommendations based on live sensor data.
-- Capable of warning farmers about low water levels, high humidity risks, and sub-optimal soil nutrition.
-
-### 🛒 Agricultural Marketplace
-- **Direct-to-Consumer:** Farmers can register as verified sellers and list fresh produce (vegetables, fruits).
-- **Supply Procurement:** Buy certified seeds, fertilizers, and smart agricultural equipment directly from the platform.
-- Fully integrated with a MongoDB backend, allowing seamless farmer registration and inventory browsing.
-
-### 🔐 Secure Authentication System
-- Robust JWT and Bcrypt-based authentication utilizing a MongoDB session store.
-- Protected routes to ensure marketplace listings and farmer dashboards remain secure.
+Sakhi-Agri is a state-of-the-art, multi-service agricultural platform designed to empower farmers with real-time data, AI-driven insights, and a direct-to-consumer marketplace. By bridging the gap between physical IoT sensors and intelligent cloud analysis, Sakhi-Agri transforms traditional farming into data-driven precision agriculture.
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## 🌟 Core Features
 
-The project relies on a decoupled, microservice-inspired architecture:
+### 📡 Real-Time Telemetry Dashboard
+*   **Live Sensor Feed**: Instant visualization of Soil Moisture, Water Levels (Ultrasonic), pH, NPK, and Humidity.
+*   **Intelligent Sync**: Seamless communication between Arduino Mega hardware and the web dashboard via a high-performance WebSocket bridge.
+*   **Hybrid Data Handling**: Real-time hardware telemetry combined with intelligent fallback simulation for missing sensor values.
+
+### 🧠 AI & ML Insights
+*   **Environment Prediction**: Machine Learning models (Random Forest) to analyze soil health and predict plant vitality.
+*   **Computer Vision (YOLOv8)**: Real-time crop disease detection and diagnostic image analysis.
+*   **Gemini Voice Assistant**: AI-powered multilingual voice guidance for hands-free agricultural support.
+
+### 🛒 Integrated Farmers Marketplace
+*   **P2P Trade**: Direct selling of fresh organic produce (vegetables, fruits) from farmers to consumers.
+*   **Supply Hub**: Easy procurement of certified seeds, smart fertilizers, and high-tech irrigation equipment.
+*   **Secure Registration**: Verified farmer profiles with complete inventory management.
+
+---
+
+## 🏗️ System Architecture
+
+Sakhi-Agri follows a **Microservices-inspired Gateway Architecture** to ensure scalability and reliability:
+
+1.  **Hardware Layer (Arduino Mega)**: Captures raw sensor data and streams it via Serial (USB).
+2.  **IoT Bridge (Node.js)**: Reads Serial streams, parses JSON, and pushes data to the Gateway.
+3.  **Gateway Server (Express.js)**: The central hub for Authentication (JWT/Bcrypt), WebSockets, and proxying AI requests.
+4.  **AI Services (Flask)**: Dedicated Python services for ML inference, Computer Vision, and Generative AI (Gemini).
+5.  **Frontend (Next.js 14)**: High-performance, responsive UI with modern glassmorphic design and real-time React state management.
+
+---
+
+## 📂 Project Structure
 
 ```text
-Sakhi-temp/
-│
-├── client/              # Next.js 14 Frontend (React, Tailwind CSS, Lucide Icons)
-├── server/              # Node.js/Express Backend Gateway (API, WebSockets, Auth)
-├── hardware/            # Arduino scripts (.ino) and Node.js Serial Bridge (bridge.js)
-├── service-ai-env/      # Future Python AI Microservice for Environment Prediction
-└── service-ai-diag/     # Future Python AI Microservice for Crop Diagnostics
+Sakhi-Agri/
+├── client/                 # Next.js 14 Frontend
+│   ├── app/                # App Router (Dashboard, Sensors, Marketplace)
+│   ├── components/         # Reusable UI Components & Visualizations
+│   ├── contexts/           # State Management (Auth, Real-time Data)
+│   └── public/             # Static Assets & Icons
+├── server/                 # Node.js Gateway Backend
+│   ├── src/
+│   │   ├── routes/         # API Endpoints (Auth, Sensors, AI)
+│   │   ├── models/         # MongoDB Schemas (Users, Marketplace)
+│   │   └── services/       # WebSockets (Socket.io) & Core Logic
+│   └── .env                # Server Configuration (Private)
+├── hardware/               # IoT Source Code
+│   ├── arduino_code.ino    # Arduino Mega Firmware
+│   └── bridge.js           # Serial-to-HTTP Gateway Bridge
+├── service-ai-env/         # ML Prediction Service (Python/Flask)
+│   ├── app.py              # ML & Gemini Integration
+│   └── models/             # Pre-trained .pkl Models
+├── service-ai-diag/        # Computer Vision Service (YOLOv8)
+│   ├── realtime_server.py  # YOLOv8 WebSocket Server
+│   └── best.pt             # Custom Trained YOLO Weights
+└── .gitignore              # Global Security Rules
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🔐 Environment Configuration (.env)
 
-### Prerequisites
-- **Node.js** (v18 or higher)
-- **MongoDB** (Local instance or Atlas URI)
-- **Arduino IDE** (If connecting physical hardware)
+For security, sensitive keys and local configurations are stored in `.env` files. **NEVER** push these to public repositories.
 
-### 1. Database Configuration
-Ensure MongoDB is running locally on `mongodb://localhost:27017` or update the `MONGO_URI` in `server/.env`.
+### 1. Server Gateway (`server/.env`)
+Create a `.env` file in the `server` directory:
+```env
+PORT=4000
+DATABASE_URL=your_mongodb_connection_string
+SESSION_SECRET=your_long_random_secret_key
+CORS_ORIGIN=http://localhost:3000
+NODE_ENV=development
+```
 
-### 2. Start the Backend Gateway
-The backend powers the authentication, database operations, and the WebSocket server.
+### 2. AI Service (`service-ai-env/.env`)
+Create a `.env` file in the `service-ai-env` directory:
+```env
+GOOGLE_API_KEY=your_gemini_api_key
+```
 
+---
+
+## 🛡️ Security & Git Best Practices
+
+The following files are **STRICTLY EXCLUDED** from version control (see `.gitignore`):
+*   `node_modules/` & `venv/`: Dependency folders (too large).
+*   `.env`: Sensitive API keys and database credentials.
+*   `*.log`: Local debug logs.
+*   `__pycache__/`: Python compilation artifacts.
+*   `build/` & `.next/`: Production build artifacts.
+
+### How to handle updates:
+1.  If you add a new environment variable, add it to this README but **NOT** the `.env` file in git.
+2.  Use `git status` before committing to ensure no private files are staged.
+3.  Always keep your `GOOGLE_API_KEY` private to avoid usage costs.
+
+---
+
+## 🚀 Installation & Running
+
+Follow these steps in separate terminals:
+
+### 1. Gateway Server
 ```bash
 cd server
 npm install
 npm run dev
 ```
-*The server will start on `http://localhost:4000`.*
 
-### 3. Start the Frontend Application
-The Next.js frontend delivers the dashboard, marketplace, and insights UI.
-
+### 2. Frontend Application
 ```bash
 cd client
 npm install
 npm run dev
 ```
-*The application will be accessible at `http://localhost:3000`.*
 
-### 4. Connect IoT Hardware (Arduino Bridge)
-If you have the physical Arduino Mega connected with the ultrasonic and soil sensors:
-1. Flash `hardware/arduino_code.ino` to your Arduino.
-2. Ensure it is connected to the correct COM port (default is `COM6`).
-3. Run the bridge script to stream serial data to the web application:
+### 3. AI Services (Python)
+```bash
+# Environment & ML Service
+cd service-ai-env
+pip install -r requirements.txt
+python app.py
 
+# Diagnostic (YOLO) Service
+cd service-ai-diag
+pip install -r requirements.txt
+python realtime_server.py
+```
+
+### 4. IoT Hardware Bridge
 ```bash
 cd hardware
-npm install
 node bridge.js
 ```
-*The bridge will automatically parse the raw serial strings and push them to the WebSocket gateway.*
+*(Ensure Arduino is connected to COM6 or update port in bridge.js)*
 
 ---
 
 ## 🔌 Hardware Setup
 
-The default configuration expects an **Arduino Mega**.
-- **Ultrasonic Sensor (Water Level):** Echo Pin 11, Trig Pin 12
-- **Soil Moisture Sensor:** Analog Pin A0
-- **Relay Module (Water Pump):** Digital Pin 8
-
-*Note: The hardware bridge (`bridge.js`) is designed to handle raw text streams (e.g., `Soil: 549 | Distance: 10 cm`) and safely convert them into JSON payloads for the backend.*
+| Component | Pin (Arduino Mega) | Description |
+| :--- | :--- | :--- |
+| **Soil Moisture** | A0 | Analog input for ground moisture % |
+| **Ultrasonic (Trig)**| 32 | Trigger pulse for water level |
+| **Ultrasonic (Echo)**| 33 | Return pulse for water level |
+| **Flow Sensor** | 2 | Interrupt-based flow rate tracking |
+| **Relay (Pump)** | 7 | Digital output for pump control |
 
 ---
 
 ## 👨‍💻 Author
-
-**Shadx-007 (Vikramjeet Maity)**
-
----
-
-## 📄 License
-This project is licensed under the MIT License.
+**Shadx-007 (Vikramjeet Maity)**  
+*Advanced Agentic IoT & AI Specialist*
